@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="退休請假">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <title>115-116年退休請假黃金規劃與互動月曆</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 載入 Font Awesome 圖示 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 載入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- 載入 html2canvas 用於下載圖片 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        @keyframes shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+        body { touch-action: manipulation; padding-bottom: env(safe-area-inset-bottom, 0px); overscroll-behavior-y: none; }
+        #app-header { padding-top: calc(env(safe-area-inset-top, 0px) + 0.875rem); padding-left: calc(env(safe-area-inset-left, 0px) + 1rem); padding-right: calc(env(safe-area-inset-right, 0px) + 1rem); }
+        #daily-salary { font-size: 16px !important; } /* 避免 iOS 點輸入框時自動放大 */
+        .shining-gold {
+            background: linear-gradient(120deg, #d97706 30%, #fef08a 50%, #d97706 70%);
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased lg:h-screen lg:overflow-hidden">
+
+    <!-- 隱藏的檔案上傳 Input 用於讀取 JSON 備份檔 -->
+    <input type="file" id="json-file-input" accept=".json,application/json" class="hidden" onchange="importFromJson(event)">
+
+    <!-- 圖片預覽層（iOS 儲存／分享用） -->
+    <div id="image-overlay" class="hidden fixed inset-0 z-[100] bg-slate-950/95 flex-col items-center p-4" style="padding-top: calc(env(safe-area-inset-top,0px) + 1rem); padding-bottom: calc(env(safe-area-inset-bottom,0px) + 1rem);">
+        <div class="w-full max-w-3xl flex justify-between items-center mb-3 gap-2">
+            <button onclick="closeImageOverlay()" class="px-4 py-2 text-sm bg-slate-800 text-slate-200 font-bold rounded-lg border border-slate-700">關閉</button>
+            <span class="text-xs text-slate-400 text-center flex-1">也可以長按圖片 → 加入照片</span>
+            <button id="image-share-btn" onclick="shareCurrentImage()" class="px-4 py-2 text-sm bg-emerald-500 text-slate-950 font-black rounded-lg">分享／儲存</button>
+        </div>
+        <div class="flex-1 w-full max-w-3xl overflow-auto rounded-xl border border-slate-800 bg-slate-950">
+            <img id="image-preview" alt="排程月曆" class="w-full h-auto">
+        </div>
+    </div>
+
+    <!-- iOS 安裝提示 -->
+    <div id="install-hint" class="hidden fixed left-3 right-3 z-[90] bg-slate-800 border border-emerald-500/40 text-slate-100 rounded-xl shadow-2xl p-3 text-xs items-center gap-3" style="bottom: calc(env(safe-area-inset-bottom,0px) + 0.75rem);">
+        <div class="flex-1 leading-relaxed">安裝成 App：點 Safari 下方的 <strong class="text-emerald-400">分享</strong> 圖示 → <strong class="text-emerald-400">加入主畫面</strong></div>
+        <button onclick="dismissInstallHint()" class="px-3 py-1.5 bg-slate-700 rounded-lg font-bold">知道了</button>
+    </div>
+
+    <!-- 頁頭導覽列 -->
+    <header id="app-header" class="bg-slate-900 border-b border-slate-800 py-3.5 px-4 md:px-6 sticky top-0 z-50 shadow-lg flex-shrink-0">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 p-2.5 rounded-xl shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-calendar-check text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-white tracking-wide">115-116年退休請假黃金規劃與互動月曆</h1>
+                    <p class="text-xs md:text-sm text-slate-400">專為 116/3/2 退休公務人員設計（跨年佈局與雙年度不休假加班費獨立精算）</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="exportToJson()" class="px-3 py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-file-export"></i> 匯出檔
+                </button>
+                <button onclick="document.getElementById('json-file-input').click()" class="px-3 py-2 text-xs md:text-sm bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-file-import"></i> 載入檔
+                </button>
+                <button onclick="resetToDefault()" class="px-3 py-2 text-xs md:text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> 重設
+                </button>
+                <button onclick="exportToImage()" class="px-3.5 py-2 text-xs md:text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg transition-all shadow-lg shadow-emerald-500/15 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-image"></i> 下載圖片
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 (左右分欄獨立滾動) -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:overflow-hidden">
+        
+        <!-- 左側：控制面板與精算儀表 -->
+        <section class="lg:col-span-4 flex flex-col gap-5 lg:h-full lg:overflow-y-auto pr-0 lg:pr-2">
+            
+            <!-- 退休檔案資訊 -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-850 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 class="font-bold text-base text-emerald-400 mb-3.5 flex items-center gap-2">
+                    <i class="fa-solid fa-passport text-lg"></i> 115-116年退休黃金檔案
+                </h3>
+                <div class="space-y-3 text-sm text-slate-300">
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80">
+                        <span class="text-slate-400">退休生效日</span>
+                        <strong class="text-white text-sm md:text-base flex items-center gap-1.5">
+                            <i class="fa-solid fa-gift text-amber-400"></i> 中華民國 116年3月2日 (二)
+                        </strong>
+                    </div>
+                    <!-- 動態今日與倒數天數 -->
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80 bg-slate-950/60 -mx-2 px-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 flex items-center gap-1"><i class="fa-solid fa-clock text-cyan-400"></i> 執行今日日期</span>
+                        <strong class="text-cyan-300 text-sm md:text-base font-bold" id="profile-today-date">--</strong>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80">
+                        <span class="text-slate-400">距離榮退倒數</span>
+                        <strong class="text-amber-400 text-sm md:text-base font-black" id="profile-countdown-days">-- 天</strong>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80">
+                        <span class="text-slate-400">115年特休額度</span>
+                        <strong class="text-white text-sm md:text-base">25 天 <span class="text-xs text-amber-400 font-normal">(加班費上限20天)</span></strong>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80">
+                        <span class="text-slate-400">116年特休額度</span>
+                        <strong class="text-white text-sm md:text-base">30 天 <span class="text-xs text-amber-400 font-normal">(加班費上限20天)</span></strong>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80">
+                        <span class="text-slate-400">116年法定權益假別</span>
+                        <strong class="text-white text-sm md:text-base">身心 3天 + 事假 4天 + 病假 28天</strong>
+                    </div>
+                    <!-- 醒目呈現：實際需到工天數與剩餘天數精算 -->
+                    <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
+                        <div class="flex justify-between items-center border-b border-emerald-500/20 pb-2">
+                            <span class="text-emerald-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-briefcase text-emerald-400 mr-1"></i> 116年實際上班</span>
+                            <strong class="text-emerald-400 text-sm md:text-base font-black" id="profile-workdays-116">18 天 <span class="text-xs text-slate-400 font-normal">(原需 35 天)</span></strong>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-emerald-500/20 pb-2">
+                            <span class="text-cyan-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-calendar-days text-cyan-400 mr-1"></i> 跨年全期實際上班</span>
+                            <strong class="text-cyan-300 text-sm md:text-base font-black" id="profile-workdays-total">83 天 <span class="text-xs text-slate-400 font-normal">(原需 100 天)</span></strong>
+                        </div>
+                        <div class="flex justify-between items-center pt-0.5">
+                            <span class="text-amber-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-hourglass-half text-amber-400 mr-1"></i> 從今日起剩餘到工</span>
+                            <strong class="text-amber-400 text-sm md:text-base font-black" id="profile-workdays-remaining">-- 天</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-slate-400">最後到工上班日</span>
+                        <strong class="text-emerald-400 text-sm md:text-base font-black" id="profile-last-workday">116年2月3日 (三)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 即時權益變現精算與儀表 -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-amber-400 text-lg"></i> 分年度假別精算與金額統計
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- 每日薪資輸入 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs text-slate-400">請設定您的預估日薪：</label>
+                            <span class="text-xs text-slate-500">不休假加班費計算基準</span>
+                        </div>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <span class="text-slate-400 text-sm font-bold">$</span>
+                            </div>
+                            <input type="number" id="daily-salary" value="2880" oninput="calculateBenefits()" class="block w-full pl-8 pr-20 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm font-bold">
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                <span class="text-slate-500 text-xs">元 / 天</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分年度統計表格 -->
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3 text-xs">
+                        <div class="font-bold text-slate-200 border-b border-slate-800 pb-2 flex justify-between items-center">
+                            <span><i class="fa-solid fa-list-check text-emerald-400 mr-1"></i> 各年度統計明細表</span>
+                            <span class="text-[10px] text-slate-400 font-normal">單位：天</span>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-center text-xs">
+                                <thead>
+                                    <tr class="text-slate-400 border-b border-slate-800/60">
+                                        <th class="py-1 text-left">假別/統計</th>
+                                        <th class="py-1 text-cyan-400">115年</th>
+                                        <th class="py-1 text-emerald-400">116年</th>
+                                        <th class="py-1 text-amber-400 font-bold">跨年合計</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-900 text-slate-300">
+                                    <tr>
+                                        <td class="py-1.5 text-left text-blue-400 font-medium">休假/特休 [特]</td>
+                                        <td id="stat-115-special" class="font-mono">0</td>
+                                        <td id="stat-116-special" class="font-mono">10</td>
+                                        <td id="stat-tot-special" class="font-mono font-bold text-blue-300">10</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5 text-left text-purple-400 font-medium">身心假 [身]</td>
+                                        <td id="stat-115-mental" class="font-mono text-slate-600">-</td>
+                                        <td id="stat-116-mental" class="font-mono">3</td>
+                                        <td id="stat-tot-mental" class="font-mono font-bold text-purple-300">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5 text-left text-amber-400 font-medium">事假 [事]</td>
+                                        <td id="stat-115-personal" class="font-mono text-slate-600">-</td>
+                                        <td id="stat-116-personal" class="font-mono">4</td>
+                                        <td id="stat-tot-personal" class="font-mono font-bold text-amber-300">4</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5 text-left text-rose-400 font-medium">病假 [病]</td>
+                                        <td id="stat-115-sick" class="font-mono text-slate-600">-</td>
+                                        <td id="stat-116-sick" class="font-mono">0</td>
+                                        <td id="stat-tot-sick" class="font-mono font-bold text-rose-300">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5 text-left text-cyan-400 font-medium">加班補休 [補]</td>
+                                        <td id="stat-115-overtime" class="font-mono">0</td>
+                                        <td id="stat-116-overtime" class="font-mono">0</td>
+                                        <td id="stat-tot-overtime" class="font-mono font-bold text-cyan-300">0</td>
+                                    </tr>
+                                    <tr class="bg-slate-900/60 text-slate-400 border-t border-slate-800">
+                                        <td class="py-1.5 text-left font-medium">原法定上班日數</td>
+                                        <td id="stat-115-std" class="font-mono">65</td>
+                                        <td id="stat-116-std" class="font-mono">35</td>
+                                        <td id="stat-tot-std" class="font-mono font-bold">100</td>
+                                    </tr>
+                                    <tr class="bg-slate-900/60 text-amber-300/90">
+                                        <td class="py-1.5 text-left font-medium">請假天數小計</td>
+                                        <td id="stat-115-leave-tot" class="font-mono">0</td>
+                                        <td id="stat-116-leave-tot" class="font-mono">17</td>
+                                        <td id="stat-tot-leave-tot" class="font-mono font-bold">17</td>
+                                    </tr>
+                                    <tr class="bg-emerald-950/40 text-emerald-400 font-bold border-t border-emerald-500/30">
+                                        <td class="py-1.5 text-left"><i class="fa-solid fa-check-double mr-1"></i> 實際到工上班</td>
+                                        <td id="stat-115-work" class="font-mono">65</td>
+                                        <td id="stat-116-work" class="font-mono text-emerald-300">18</td>
+                                        <td id="stat-tot-work" class="font-mono text-emerald-400 font-black">83</td>
+                                    </tr>
+                                    <tr class="bg-amber-950/30 text-amber-300 font-bold">
+                                        <td class="py-1.5 text-left"><i class="fa-solid fa-clock mr-1"></i> 從今日起剩餘到工</td>
+                                        <td colspan="3" id="stat-remaining-work-td" class="font-mono text-right pr-2">-- 天</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 115與116年不休假加班費分年度明細卡片 -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3.5 text-xs md:text-sm">
+                        <div class="text-xs font-bold text-slate-200 border-b border-slate-800 pb-2 flex items-center justify-between">
+                            <span><i class="fa-solid fa-coins text-amber-400 mr-1"></i> 分年度不休假加班費與額度試算</span>
+                            <span class="text-slate-400 font-normal">合計最高 40 天</span>
+                        </div>
+
+                        <!-- 115年不休假加班費 -->
+                        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-cyan-300 font-bold">115年度不休假加班費</span>
+                                <span class="text-amber-400 font-black font-mono text-xs md:text-sm" id="stat-cash-money-115">NT$ 57,600</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span>(額度 25 天，上限 20 天)</span>
+                                <span>可轉領天數：<strong class="text-white" id="stat-cash-days-115">20 / 20 天</strong></span>
+                            </div>
+                            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden mt-1">
+                                <div id="bar-cash-115" class="bg-amber-500 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <!-- 116年不休假加班費 -->
+                        <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/80 space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-emerald-300 font-bold">116年度不休假加班費</span>
+                                <span class="text-emerald-400 font-black font-mono text-xs md:text-sm" id="stat-cash-money-116">NT$ 57,600</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span>(額度 30 天，上限 20 天)</span>
+                                <span>可轉領天數：<strong class="text-white" id="stat-cash-days-116">20 / 20 天</strong></span>
+                            </div>
+                            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden mt-1">
+                                <div id="bar-cash-116" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 智慧分析與警示提示 -->
+                    <div id="warning-container" class="p-4 rounded-xl border text-xs md:text-sm space-y-2">
+                        <!-- JS 動態生成 -->
+                    </div>
+
+                    <!-- 總金額回報卡片 -->
+                    <div class="bg-gradient-to-r from-emerald-950/40 to-teal-950/20 p-4.5 rounded-xl border border-emerald-500/30 shadow-lg">
+                        <div class="text-xs text-slate-400 mb-1 flex justify-between">
+                            <span class="font-bold text-slate-300">雙年度不休假加班費總計 (115+116年)</span>
+                            <span class="text-slate-500 font-mono text-[11px]" id="calc-method-label">(115年20天 + 116年20天 = 40天 × 2,880)</span>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black text-emerald-400 tracking-tight" id="total-cash-bonus">NT$ 115,200</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作說明卡片 -->
+            <div class="bg-slate-900 p-4.5 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 class="font-bold text-base text-white mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-blue-400 text-lg"></i> 智慧點擊循環切換假別
+                </h3>
+                <p class="text-xs md:text-sm text-slate-300 leading-relaxed mb-3">
+                    點擊右側月曆上的工作日可切換假別：
+                    <br><span class="text-cyan-400 font-bold">• 115年：</span>可切換【上班】、【休假】、【加班補休】。
+                    <br><span class="text-emerald-400 font-bold">• 116年：</span>包含【特休】、【身心】、【事假】、【病假】、【補休】。
+                    <br><span class="text-amber-400 font-bold">• 已過日期：</span>早於今日之歷史日期已鎖定保護，不可變更。
+                </p>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 上班
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 特休 [特]
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> 身心 [身]
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 事假 [事]
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 病假 [病]
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> 補休 [補]
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 右側：115-116年月曆主體 -->
+        <section class="lg:col-span-8 flex flex-col gap-5 lg:h-full lg:overflow-y-auto pr-0 lg:pr-2">
+            
+            <!-- 圖例與標籤說明 -->
+            <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs md:text-sm">
+                <span class="font-bold text-slate-300"><i class="fa-solid fa-tags text-slate-400 mr-1"></i> 請假圖例說明：</span>
+                <div class="flex flex-wrap gap-2.5">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500 inline-block"></span><strong class="text-slate-200">休假/特休 [特]</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-500 inline-block"></span><strong class="text-slate-200">身心假 [身]</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500 inline-block"></span><strong class="text-slate-200">事假 [事]</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span><strong class="text-slate-200">病假 [病]</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-cyan-400 inline-block"></span><strong class="text-slate-200">補休 [補]</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-950 border border-emerald-500/40 inline-block text-center text-[10px] text-emerald-400">🟢</span><strong class="text-slate-200">上班</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-950/80 border border-slate-800 inline-block text-center text-[10px] text-slate-500">🔒</span><strong class="text-slate-400">已過期/鎖定</strong></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500/20 border border-red-500/40 inline-block"></span><strong class="text-slate-400">國定 / 例假日</strong></span>
+                </div>
+            </div>
+
+            <!-- 可匯出圖片的月曆主體 -->
+            <div id="calendar-capture-container" class="bg-slate-950 p-5 md:p-7 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+                
+                <!-- 月曆標頭 Banner -->
+                <div class="flex justify-between items-start border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-plane-departure text-emerald-400"></i> 我的 115-116 年榮退黃金排程行事曆
+                        </h2>
+                        <p class="text-xs md:text-sm text-slate-300 mt-1 font-medium" id="calendar-subtitle">涵蓋跨年漸進退休佈局 ｜ 退休生效日：116 年 3 月 2 日 (二)</p>
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <span class="text-xs text-slate-400 font-bold block mb-1">116年到工精算指標：</span>
+                        <div class="text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                            原需 35 天 ➔ 實際只需到工 <span id="header-workday-count" class="text-sm underline decoration-emerald-400 font-black">18 天</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 各月份月曆 (動態容器) -->
+                <div class="space-y-7" id="dynamic-calendar-container">
+                    <!-- JS 將依據執行時的日期，動態生成自當月起至 116年3月 之月曆卡片 -->
+                </div>
+
+                <!-- 底部頁尾 -->
+                <div class="text-center pt-3 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
+                    <span>* 本表依中華民國 115-116 年行政院人事行政總處核定辦公日曆表建置</span>
+                    <span>我的榮退黃金指南 V9.3 (115-116年雙年度獨立精算與歷程防護版)</span>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // 115年 (2026) 與 116年 (2027) 的公務放假和國定假日資料
+        const HOLIDAYS = {
+            // 115年 10月
+            '115-10-03': '週六例假', '115-10-04': '週日例假',
+            '115-10-09': '國慶補假', '115-10-10': '國慶節', '115-10-11': '週日例假',
+            '115-10-17': '週六例假', '115-10-18': '週日例假',
+            '115-10-24': '週六例假', '115-10-25': '臺灣光復節', '115-10-26': '光復補假',
+            '115-10-31': '週六例假',
+
+            // 115年 11月
+            '115-11-01': '週日例假',
+            '115-11-07': '週六例假', '115-11-08': '週日例假',
+            '115-11-14': '週六例假', '115-11-15': '週日例假',
+            '115-11-21': '週六例假', '115-11-22': '週日例假',
+            '115-11-28': '週六例假', '115-11-29': '週日例假',
+
+            // 115年 12月
+            '115-12-05': '週六例假', '115-12-06': '週日例假',
+            '115-12-12': '週六例假', '115-12-13': '週日例假',
+            '115-12-19': '週六例假', '115-12-20': '週日例假',
+            '115-12-25': '行憲紀念日', '115-12-26': '週六例假', '115-12-27': '週日例假',
+
+            // 116年 1月份
+            '116-01-01': '元旦',
+            '116-01-02': '週六例假', '116-01-03': '週日例假',
+            '116-01-09': '週六例假', '116-01-10': '週日例假',
+            '116-01-16': '週六例假', '116-01-17': '週日例假',
+            '116-01-23': '週六例假', '116-01-24': '週日例假',
+            '116-01-30': '週六例假', '116-01-31': '週日例假',
+
+            // 116年 2月份
+            '116-02-04': '小年夜放假', '116-02-05': '除夕', '116-02-06': '初一',
+            '116-02-07': '初二', '116-02-08': '初三', '116-02-09': '初一補假',
+            '116-02-10': '初二補假', '116-02-13': '週六例假', '116-02-14': '週日例假',
+            '116-02-20': '週六例假', '116-02-21': '週日例假', '116-02-27': '228連假',
+            '116-02-28': '228紀念日',
+            
+            // 116年 3月份
+            '116-03-01': '228補假',
+        };
+
+        // 預設優化方案
+        const DEFAULT_PLAN = {
+            // 116年 1月份：4天事假 + 1天身心假
+            '116-01-08': 'personal_leave', // 事假 1
+            '116-01-15': 'personal_leave', // 事假 2
+            '116-01-22': 'personal_leave', // 事假 3
+            '116-01-28': 'mental_leave',   // 身心假 1
+            '116-01-29': 'personal_leave', // 事假 4
+
+            // 116年 2月份：2/1~2/3 上班收拾手續，2/4起連休27天至3/2榮退
+            '116-02-01': 'work', '116-02-02': 'work', '116-02-03': 'work',
+            '116-02-11': 'mental_leave',   // 身心假 2
+            '116-02-12': 'mental_leave',   // 身心假 3
+            '116-02-15': 'special_leave',  // 特休 1
+            '116-02-16': 'special_leave',  // 特休 2
+            '116-02-17': 'special_leave',  // 特休 3
+            '116-02-18': 'special_leave',  // 特休 4
+            '116-02-19': 'special_leave',  // 特休 5
+            '116-02-22': 'special_leave',  // 特休 6
+            '116-02-23': 'special_leave',  // 特休 7
+            '116-02-24': 'special_leave',  // 特休 8
+            '116-02-25': 'special_leave',  // 特休 9
+            '116-02-26': 'special_leave',  // 特休 10
+        };
+
+        let userPlan = JSON.parse(JSON.stringify(DEFAULT_PLAN));
+        window.userPlan = userPlan;
+
+        function setUserPlan(newPlan) {
+            userPlan = JSON.parse(JSON.stringify(newPlan));
+            window.userPlan = userPlan;
+        }
+
+        function getTodayInfo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const yearROC = year - 1911;
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const dateKey = `${yearROC}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            const retireDate = new Date('2027-03-02');
+            const diffTime = retireDate - new Date(year, now.getMonth(), day);
+            const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+            
+            return { yearROC, month, day, dateKey, diffDays, now };
+        }
+
+        function showToast(message) {
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs md:text-sm font-bold transition-all duration-300 opacity-0 transform translate-y-2 pointer-events-none flex items-center gap-2';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = message;
+            toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+            }, 3200);
+        }
+
+        function getFirstDayOfWeek(year, month) {
+            return new Date(year, month - 1, 1).getDay();
+        }
+
+        function formatDateKey(yearROC, month, day) {
+            const mStr = String(month).padStart(2, '0');
+            const dStr = String(day).padStart(2, '0');
+            return `${yearROC}-${mStr}-${dStr}`;
+        }
+
+        function convertYearToAdu(dateKey) {
+            if (dateKey.startsWith('115-')) return dateKey.replace('115-', '2026-');
+            if (dateKey.startsWith('116-')) return dateKey.replace('116-', '2027-');
+            return dateKey;
+        }
+
+        function handleCellClick(dateKey) {
+            const todayInfo = getTodayInfo();
+
+            // 若點選之日期早於今日，鎖定不可異動假別
+            if (dateKey < todayInfo.dateKey) {
+                showToast(`🔒 日期【${dateKey}】已為過去歷史紀錄，無法變更假別！`);
+                return;
+            }
+
+            if (HOLIDAYS[dateKey]) {
+                showToast(`📅 ${dateKey} 為國定/例假日【${HOLIDAYS[dateKey]}】，無法變更！`);
+                return;
+            }
+            if (dateKey === '116-03-02') {
+                showToast(`🎉 3月2日為榮退生效日，無法變更假別！`);
+                return;
+            }
+            if (new Date(convertYearToAdu(dateKey)) > new Date('2027-03-02')) {
+                showToast(`✨ 退休後已經開啟自在人生，無需設假囉。`);
+                return;
+            }
+
+            const currentStatus = userPlan[dateKey] || 'work';
+            let nextStatus = 'work';
+
+            // 依照年份進行不同的假別循環切換機制
+            if (dateKey.startsWith('115-')) {
+                if (currentStatus === 'work') {
+                    nextStatus = 'special_leave';
+                } else if (currentStatus === 'special_leave') {
+                    nextStatus = 'overtime_leave';
+                } else {
+                    nextStatus = 'work';
+                }
+            } else {
+                if (currentStatus === 'work') {
+                    nextStatus = 'special_leave';
+                } else if (currentStatus === 'special_leave') {
+                    nextStatus = 'mental_leave';
+                } else if (currentStatus === 'mental_leave') {
+                    nextStatus = 'personal_leave';
+                } else if (currentStatus === 'personal_leave') {
+                    nextStatus = 'sick_leave';
+                } else if (currentStatus === 'sick_leave') {
+                    nextStatus = 'overtime_leave';
+                } else {
+                    nextStatus = 'work';
+                }
+            }
+
+            userPlan[dateKey] = nextStatus;
+            window.userPlan = userPlan;
+            
+            const sickCheck = getConsecutiveSickDaysInfo();
+            if (nextStatus === 'sick_leave' && sickCheck.hasConsecutive) {
+                showToast(`🩺 提醒：連續放病假達 2 天以上，依規定須檢附醫師證明或佐證資料！`);
+            }
+
+            renderCalendars();
+            calculateBenefits();
+        }
+
+        function getConsecutiveSickDaysInfo() {
+            let hasConsecutive = false;
+            const sortedSickDates = Object.keys(userPlan)
+                .filter(k => userPlan[k] === 'sick_leave')
+                .sort();
+            
+            for (let i = 0; i < sortedSickDates.length - 1; i++) {
+                const d1 = new Date(convertYearToAdu(sortedSickDates[i]));
+                const d2 = new Date(convertYearToAdu(sortedSickDates[i+1]));
+                const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+                if (diffDays === 1) {
+                    hasConsecutive = true;
+                    break;
+                }
+            }
+            return { hasConsecutive };
+        }
+
+        function renderCalendars() {
+            const container = document.getElementById('dynamic-calendar-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const todayInfo = getTodayInfo();
+            
+            // 更新頂端與儀表板中的今日與倒數資訊
+            const todayDateEl = document.getElementById('profile-today-date');
+            if (todayDateEl) {
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                todayDateEl.textContent = `${todayInfo.yearROC}年${todayInfo.month}月${todayInfo.day}日 (${weekDays[todayInfo.now.getDay()]})`;
+            }
+            const countdownEl = document.getElementById('profile-countdown-days');
+            if (countdownEl) {
+                countdownEl.textContent = `${todayInfo.diffDays} 天`;
+            }
+
+            // 計算起始年月：若執行日期小於 115/10 則從 115/10 開始；若在 115/10~116/3 之間，則從執行當月開始
+            let startYearROC = 115;
+            let startMonth = 10;
+
+            if (todayInfo.yearROC === 115 && todayInfo.month > 10) {
+                startMonth = todayInfo.month;
+            } else if (todayInfo.yearROC === 116 && todayInfo.month <= 3) {
+                startYearROC = 116;
+                startMonth = todayInfo.month;
+            }
+
+            // 各月份對照說明
+            const monthMeta = {
+                '115-10': { title: '「退休前半年衝刺期」', note: '10/24-10/26 光復節三連假', color: 'cyan' },
+                '115-11': { title: '「業務盤點與傳承準備」', note: '消化 115 年度休假與補休', color: 'cyan' },
+                '115-12': { title: '「年度結算與交接整備」', note: '12/25-12/27 行憲紀念日三連假', color: 'cyan' },
+                '116-01': { title: '「過年前分散減壓月」', note: '每週五事假＋1/28身心假，享受週休三~四日', color: 'blue' },
+                '116-02': { title: '「辦理退職與無縫連休27天」', note: '2/1-2/3交接收拾(2/3最後到工)，2/4起連休27天至榮退', color: 'purple' },
+                '116-03': { title: '「榮退大吉」', note: '🎉 3/2 圓滿榮退，開啟璀璨退休第二人生！', color: 'amber' }
+            };
+
+            // 依序生成自起始年月至 116年3月 之月份卡片
+            let currentYr = startYearROC;
+            let currentM = startMonth;
+
+            while (currentYr < 116 || (currentYr === 116 && currentM <= 3)) {
+                const monthKey = `${currentYr}-${String(currentM).padStart(2, '0')}`;
+                const meta = monthMeta[monthKey] || { title: '', note: '退休排程規劃', color: 'blue' };
+                const totalDays = (currentYr === 116 && currentM === 2) ? 28 : (currentM === 11 ? 30 : 31);
+                
+                const monthCard = document.createElement('div');
+                monthCard.className = "bg-slate-900/60 p-4.5 rounded-2xl border border-slate-800/80";
+                monthCard.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+                        <h3 class="text-base md:text-lg font-black text-white flex items-center gap-2">
+                            <span class="bg-${meta.color}-500/10 text-${meta.color}-400 w-8 h-8 rounded-lg flex items-center justify-center font-black border border-${meta.color}-500/25 text-sm md:text-base">${currentM}</span> ${currentYr} 年 ${currentM} 月份 <span class="text-xs md:text-sm text-slate-300 font-normal">${meta.title}</span>
+                        </h3>
+                        <span class="text-xs text-${meta.color}-300 bg-${meta.color}-500/10 px-2.5 py-1 rounded border border-${meta.color}-500/20 font-bold">${meta.note}</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1.5 text-center text-xs md:text-sm font-black text-slate-400 mb-2.5 uppercase">
+                        <div class="text-red-400">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-red-400">六</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2" id="calendar-grid-${monthKey}"></div>
+                `;
+                container.appendChild(monthCard);
+
+                renderSingleMonth(currentYr, currentM, `calendar-grid-${monthKey}`, totalDays, todayInfo.dateKey);
+
+                currentM++;
+                if (currentM > 12) {
+                    currentM = 1;
+                    currentYr++;
+                }
+            }
+        }
+
+        function renderSingleMonth(yearROC, month, containerId, totalDays, todayKey) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const adYear = yearROC === 115 ? 2026 : 2027;
+            const firstDay = getFirstDayOfWeek(adYear, month);
+            
+            // 月初空格
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "min-h-[70px] md:min-h-[85px] rounded-xl bg-slate-950/20 border border-dashed border-slate-900/40 flex items-center justify-center";
+                container.appendChild(emptyCell);
+            }
+
+            // 日期元素
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = formatDateKey(yearROC, month, day);
+                const isHoliday = HOLIDAYS[dateKey];
+                const isRetire = (dateKey === '116-03-02');
+                const isPostRetire = (new Date(convertYearToAdu(dateKey)) > new Date('2027-03-02'));
+                const isToday = (dateKey === todayKey);
+                const isPast = (dateKey < todayKey); // 判斷是否為已過的歷史日期
+                
+                const cell = document.createElement('div');
+                cell.className = "min-h-[70px] md:min-h-[85px] rounded-xl p-2.5 flex flex-col justify-between transition-all duration-200 cursor-pointer relative group text-sm font-black select-none border shadow-md ";
+                
+                let labelText = "上班";
+                let bgStyle = "bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-100";
+                let tagColor = "text-emerald-400";
+                
+                if (isHoliday) {
+                    labelText = isHoliday;
+                    bgStyle = "bg-red-950/20 hover:bg-red-950/30 border-red-900/30 text-red-300";
+                    tagColor = "text-red-400 font-extrabold";
+                } else if (isRetire) {
+                    labelText = "榮退大吉 🎉";
+                    bgStyle = "shining-gold text-slate-950 border-amber-400 font-extrabold";
+                    tagColor = "text-slate-950 font-black";
+                } else if (isPostRetire) {
+                    labelText = "退休享福";
+                    bgStyle = "bg-slate-900/40 border-slate-900 text-slate-600 cursor-not-allowed";
+                    tagColor = "text-slate-600 font-medium";
+                } else {
+                    const planStatus = userPlan[dateKey] || 'work';
+                    if (planStatus === 'special_leave') {
+                        labelText = yearROC === 115 ? "休假 [特]" : "特休 [特]";
+                        bgStyle = "bg-blue-950/50 hover:bg-blue-900/40 border-blue-500/50 text-blue-100 shadow-md shadow-blue-500/15";
+                        tagColor = "text-blue-300 font-black";
+                    } else if (planStatus === 'mental_leave') {
+                        labelText = "身心 [身]";
+                        bgStyle = "bg-purple-950/50 hover:bg-purple-900/40 border-purple-500/50 text-purple-100 shadow-md shadow-purple-500/15";
+                        tagColor = "text-purple-300 font-black";
+                    } else if (planStatus === 'personal_leave') {
+                        labelText = "事假 [事]";
+                        bgStyle = "bg-amber-950/50 hover:bg-amber-900/40 border-amber-500/50 text-amber-100 shadow-md shadow-amber-500/15";
+                        tagColor = "text-amber-300 font-black";
+                    } else if (planStatus === 'sick_leave') {
+                        labelText = "病假 [病]";
+                        bgStyle = "bg-rose-950/50 hover:bg-rose-900/40 border-rose-500/50 text-rose-100 shadow-md shadow-rose-500/15";
+                        tagColor = "text-rose-300 font-black";
+                    } else if (planStatus === 'overtime_leave') {
+                        labelText = "補休 [補]";
+                        bgStyle = "bg-cyan-950/50 hover:bg-cyan-900/40 border-cyan-500/50 text-cyan-100 shadow-md shadow-cyan-500/15";
+                        tagColor = "text-cyan-300 font-black";
+                    } else if (planStatus === 'work') {
+                        labelText = "上班 🟢";
+                        bgStyle = "bg-slate-900 hover:bg-slate-850 border-emerald-500/30 text-slate-200 hover:border-emerald-500/50";
+                        tagColor = "text-emerald-400 bg-emerald-500/5 rounded py-0.5 font-black";
+                    }
+
+                    // 對於已過期/歷史日期，套用深色鎖定塗色樣式，並呈現不可變更視覺
+                    if (isPast) {
+                        bgStyle = "bg-slate-950/80 border-slate-850 text-slate-500 opacity-75 hover:opacity-100 cursor-not-allowed";
+                        tagColor = "text-slate-500 font-medium";
+                    }
+                }
+
+                if (isToday) {
+                    bgStyle += " ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950 shadow-emerald-500/20";
+                }
+
+                cell.className += bgStyle;
+
+                cell.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-sm md:text-base ${isRetire ? 'text-slate-950 font-black' : (isPast ? 'text-slate-400' : 'text-slate-100 font-extrabold')}">${day}</span>
+                        ${isToday ? `<span class="bg-emerald-500 text-slate-950 text-[10px] px-1 rounded font-black">今天</span>` : (isPast ? `<span class="text-[10px] text-slate-500 flex items-center gap-0.5"><i class="fa-solid fa-lock text-[9px]"></i> 已過</span>` : (!isHoliday && !isRetire && !isPostRetire ? `<span class="opacity-0 group-hover:opacity-100 text-[10px] text-slate-400"><i class="fa-solid fa-arrows-rotate"></i></span>` : ''))}
+                    </div>
+                    <div class="text-xs font-black truncate tracking-tight text-center ${tagColor} mt-2 pb-0.5">${labelText}</div>
+                `;
+
+                cell.onclick = () => handleCellClick(dateKey);
+                container.appendChild(cell);
+            }
+        }
+
+        function calculateBenefits() {
+            const stats = {
+                115: { stdWorkdays: 0, special: 0, mental: 0, personal: 0, sick: 0, overtime: 0, work: 0 },
+                116: { stdWorkdays: 0, special: 0, mental: 0, personal: 0, sick: 0, overtime: 0, work: 0 }
+            };
+
+            let lastWorkdayKey = "116-02-03";
+            let remainingStdWorkdays = 0;
+            let remainingActualWorkdays = 0;
+            const todayInfo = getTodayInfo();
+
+            ['115', '116'].forEach(yr => {
+                const months = yr === '115' ? [10, 11, 12] : [1, 2, 3];
+                months.forEach(m => {
+                    const daysInMonth = (yr === '116' && m === 2) ? 28 : (m === 11 ? 30 : 31);
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const dateKey = `${yr}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        if (HOLIDAYS[dateKey] || dateKey === '116-03-02') continue;
+                        if (new Date(convertYearToAdu(dateKey)) > new Date('2027-03-02')) continue;
+
+                        stats[yr].stdWorkdays++;
+
+                        const st = userPlan[dateKey] || 'work';
+                        if (st === 'work') {
+                            stats[yr].work++;
+                            if (yr === '116') lastWorkdayKey = dateKey;
+                        } else if (st === 'special_leave') {
+                            stats[yr].special++;
+                        } else if (st === 'mental_leave') {
+                            stats[yr].mental++;
+                        } else if (st === 'personal_leave') {
+                            stats[yr].personal++;
+                        } else if (st === 'sick_leave') {
+                            stats[yr].sick++;
+                        } else if (st === 'overtime_leave') {
+                            stats[yr].overtime++;
+                        }
+
+                        // 統計自「今日」起算之剩餘到工上班日數
+                        if (dateKey >= todayInfo.dateKey) {
+                            remainingStdWorkdays++;
+                            if (st === 'work') {
+                                remainingActualWorkdays++;
+                            }
+                        }
+                    }
+                });
+            });
+
+            const leave115Tot = stats[115].special + stats[115].overtime;
+            const leave116Tot = stats[116].special + stats[116].mental + stats[116].personal + stats[116].sick + stats[116].overtime;
+
+            const el115Special = document.getElementById('stat-115-special'); if (el115Special) el115Special.textContent = stats[115].special;
+            const el115Overtime = document.getElementById('stat-115-overtime'); if (el115Overtime) el115Overtime.textContent = stats[115].overtime;
+            const el115Std = document.getElementById('stat-115-std'); if (el115Std) el115Std.textContent = stats[115].stdWorkdays;
+            const el115LeaveTot = document.getElementById('stat-115-leave-tot'); if (el115LeaveTot) el115LeaveTot.textContent = leave115Tot;
+            const el115Work = document.getElementById('stat-115-work'); if (el115Work) el115Work.textContent = stats[115].work;
+
+            const el116Special = document.getElementById('stat-116-special'); if (el116Special) el116Special.textContent = stats[116].special;
+            const el116Mental = document.getElementById('stat-116-mental'); if (el116Mental) el116Mental.textContent = stats[116].mental;
+            const el116Personal = document.getElementById('stat-116-personal'); if (el116Personal) el116Personal.textContent = stats[116].personal;
+            const el116Sick = document.getElementById('stat-116-sick'); if (el116Sick) el116Sick.textContent = stats[116].sick;
+            const el116Overtime = document.getElementById('stat-116-overtime'); if (el116Overtime) el116Overtime.textContent = stats[116].overtime;
+            const el116Std = document.getElementById('stat-116-std'); if (el116Std) el116Std.textContent = stats[116].stdWorkdays;
+            const el116LeaveTot = document.getElementById('stat-116-leave-tot'); if (el116LeaveTot) el116LeaveTot.textContent = leave116Tot;
+            const el116Work = document.getElementById('stat-116-work'); if (el116Work) el116Work.textContent = stats[116].work;
+
+            const elTotSpecial = document.getElementById('stat-tot-special'); if (elTotSpecial) elTotSpecial.textContent = stats[115].special + stats[116].special;
+            const elTotMental = document.getElementById('stat-tot-mental'); if (elTotMental) elTotMental.textContent = stats[116].mental;
+            const elTotPersonal = document.getElementById('stat-tot-personal'); if (elTotPersonal) elTotPersonal.textContent = stats[116].personal;
+            const elTotSick = document.getElementById('stat-tot-sick'); if (elTotSick) elTotSick.textContent = stats[116].sick;
+            const elTotOvertime = document.getElementById('stat-tot-overtime'); if (elTotOvertime) elTotOvertime.textContent = stats[115].overtime + stats[116].overtime;
+            const elTotStd = document.getElementById('stat-tot-std'); if (elTotStd) elTotStd.textContent = stats[115].stdWorkdays + stats[116].stdWorkdays;
+            const elTotLeaveTot = document.getElementById('stat-tot-leave-tot'); if (elTotLeaveTot) elTotLeaveTot.textContent = leave115Tot + leave116Tot;
+            const elTotWork = document.getElementById('stat-tot-work'); if (elTotWork) elTotWork.textContent = stats[115].work + stats[116].work;
+
+            const elRemainingWorkTd = document.getElementById('stat-remaining-work-td');
+            if (elRemainingWorkTd) {
+                elRemainingWorkTd.innerHTML = `<span class="text-amber-400 font-black">${remainingActualWorkdays} 天</span> <span class="text-slate-400 font-normal text-[11px]">(原剩 ${remainingStdWorkdays} 天)</span>`;
+            }
+
+            // 更新左側卡片三項動態指標
+            const profileWork116El = document.getElementById('profile-workdays-116');
+            if (profileWork116El) {
+                profileWork116El.innerHTML = `${stats[116].work} 天 <span class="text-xs text-slate-400 font-normal">(原需 ${stats[116].stdWorkdays} 天)</span>`;
+            }
+
+            const profileWorkTotalEl = document.getElementById('profile-workdays-total');
+            if (profileWorkTotalEl) {
+                profileWorkTotalEl.innerHTML = `${stats[115].work + stats[116].work} 天 <span class="text-xs text-slate-400 font-normal">(原需 ${stats[115].stdWorkdays + stats[116].stdWorkdays} 天)</span>`;
+            }
+
+            const profileWorkRemainingEl = document.getElementById('profile-workdays-remaining');
+            if (profileWorkRemainingEl) {
+                profileWorkRemainingEl.innerHTML = `${remainingActualWorkdays} 天 <span class="text-xs text-slate-400 font-normal">(原剩 ${remainingStdWorkdays} 天)</span>`;
+            }
+
+            const headerWorkdayCountEl = document.getElementById('header-workday-count');
+            if (headerWorkdayCountEl) {
+                headerWorkdayCountEl.textContent = `${stats[116].work} 天 (自今日起剩 ${remainingActualWorkdays} 天)`;
+            }
+
+            const dailySalary = parseInt(document.getElementById('daily-salary').value) || 2880;
+
+            const unused115 = Math.max(0, 25 - stats[115].special);
+            const cashDays115 = Math.min(20, unused115);
+            const cashMoney115 = cashDays115 * dailySalary;
+
+            const unused116 = Math.max(0, 30 - stats[116].special);
+            const cashDays116 = Math.min(20, unused116);
+            const cashMoney116 = cashDays116 * dailySalary;
+
+            const totalCash = cashMoney115 + cashMoney116;
+
+            const statCashDays115El = document.getElementById('stat-cash-days-115');
+            if (statCashDays115El) statCashDays115El.textContent = `${cashDays115} / 20 天`;
+
+            const statCashMoney115El = document.getElementById('stat-cash-money-115');
+            if (statCashMoney115El) statCashMoney115El.textContent = `NT$ ${cashMoney115.toLocaleString()}`;
+
+            const barCash115El = document.getElementById('bar-cash-115');
+            if (barCash115El) barCash115El.style.width = `${Math.min(100, (cashDays115 / 20) * 100)}%`;
+
+            const statCashDays116El = document.getElementById('stat-cash-days-116');
+            if (statCashDays116El) statCashDays116El.textContent = `${cashDays116} / 20 天`;
+
+            const statCashMoney116El = document.getElementById('stat-cash-money-116');
+            if (statCashMoney116El) statCashMoney116El.textContent = `NT$ ${cashMoney116.toLocaleString()}`;
+
+            const barCash116El = document.getElementById('bar-cash-116');
+            if (barCash116El) barCash116El.style.width = `${Math.min(100, (cashDays116 / 20) * 100)}%`;
+
+            const lastWorkDateObj = new Date(convertYearToAdu(lastWorkdayKey));
+            const weekDaysStr = ['日', '一', '二', '三', '四', '五', '六'];
+            const lastWorkDateFormatted = `116年${lastWorkDateObj.getMonth() + 1}月${lastWorkDateObj.getDate()}日 (${weekDaysStr[lastWorkDateObj.getDay()]})`;
+            const profileLastWorkdayEl = document.getElementById('profile-last-workday');
+            if (profileLastWorkdayEl) profileLastWorkdayEl.textContent = lastWorkDateFormatted;
+
+            const warningContainer = document.getElementById('warning-container');
+            let warnings = [];
+            const sickCheck = getConsecutiveSickDaysInfo();
+
+            if (stats[116].sick > 28) {
+                warnings.push(`🚨 <strong>116年病假超過 28 天上限</strong>：超出公務人員每年 28 天全薪病假額度！`);
+            }
+
+            if (sickCheck.hasConsecutive) {
+                warnings.push(`🩺 <strong>連續病假提醒</strong>：排定有連續 2 天（或以上）病假，依規定須檢附診斷證明！`);
+            }
+
+            if (stats[116].special > 10) warnings.push(`⚠️ <strong>116年特休超過 10 天</strong>：超過 10 天特休會減少 116 年可領不休假加班費天數！`);
+            if (stats[115].special > 5) warnings.push(`ℹ <strong>115年休假提醒</strong>：115年休假超過 5 天，可請領不休假加班費天數將少於 20 天！`);
+
+            if (warningContainer) {
+                if (warnings.length === 0 && stats[116].special <= 10 && stats[116].mental === 3 && stats[116].personal === 4) {
+                    warningContainer.className = "p-4 rounded-xl border bg-emerald-950/30 border-emerald-500/40 text-emerald-200 space-y-2";
+                    warningContainer.innerHTML = `
+                        <div class="font-bold flex items-center gap-2 text-emerald-400 text-sm">
+                            <i class="fa-solid fa-crown text-amber-400 animate-bounce text-base"></i> 🏆 雙年度不休假加班費極大化！
+                        </div>
+                        <p class="text-slate-300 leading-relaxed text-xs md:text-sm">
+                            • <strong>115年加班費：</strong>20天全領 ➔ <strong>NT$ ${cashMoney115.toLocaleString()}</strong><br>
+                            • <strong>116年加班費：</strong>20天全領 ➔ <strong>NT$ ${cashMoney116.toLocaleString()}</strong><br>
+                            • <strong>總效益：</strong>合計請領高達 <strong>40天加班費 (NT$ ${totalCash.toLocaleString()})</strong>！
+                        </p>
+                    `;
+                } else {
+                    warningContainer.className = "p-4 rounded-xl border bg-slate-900 border-slate-800 text-slate-300 space-y-2";
+                    warningContainer.innerHTML = `
+                        <div class="font-bold text-amber-400 mb-1 text-sm"><i class="fa-solid fa-triangle-exclamation"></i> 假別提醒與說明：</div>
+                        <ul class="list-disc pl-4 space-y-1 text-xs md:text-sm text-slate-300">
+                            ${warnings.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+            }
+
+            const calcMethodLabelEl = document.getElementById('calc-method-label');
+            if (calcMethodLabelEl) calcMethodLabelEl.textContent = `(115年${cashDays115}天: $${cashMoney115.toLocaleString()} + 116年${cashDays116}天: $${cashMoney116.toLocaleString()})`;
+
+            const totalCashBonusEl = document.getElementById('total-cash-bonus');
+            if (totalCashBonusEl) totalCashBonusEl.textContent = `NT$ ${totalCash.toLocaleString()}`;
+
+            savePlan();
+        }
+
+        // ===== 自動儲存（存在這台裝置的 App 內）=====
+        const STORAGE_KEY = 'retire116.v1';
+        function savePlan() {
+            try {
+                const salaryEl = document.getElementById('daily-salary');
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    userPlan: userPlan,
+                    dailySalary: salaryEl ? salaryEl.value : ''
+                }));
+            } catch (e) { /* 儲存空間不可用時略過 */ }
+        }
+        function loadPlan() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (data && data.userPlan && typeof data.userPlan === 'object') {
+                    setUserPlan(data.userPlan);
+                    if (data.dailySalary) document.getElementById('daily-salary').value = data.dailySalary;
+                }
+            } catch (e) { /* 資料損毀則使用預設方案 */ }
+        }
+
+        function resetToDefault() {
+            setUserPlan(DEFAULT_PLAN);
+            renderCalendars();
+            calculateBenefits();
+            showToast("🔄 已重設為黃金規劃方案！");
+        }
+
+        function exportToJson() {
+            const dailySalary = document.getElementById('daily-salary').value;
+            const data = {
+                title: "115-116年退休請假排程紀錄",
+                exportTime: new Date().toLocaleString(),
+                dailySalary: dailySalary,
+                userPlan: userPlan
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const fileName = `116退休排假紀錄_${new Date().toISOString().slice(0,10)}.json`;
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            let file = null;
+            try { file = new File([blob], fileName, { type: "application/json" }); } catch (e) {}
+            if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({ files: [file], title: "退休請假備份" })
+                    .then(() => showToast("💾 已匯出排假備份檔！"))
+                    .catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, fileName); });
+                return;
+            }
+            downloadBlob(blob, fileName);
+        }
+
+        function downloadBlob(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            showToast("💾 已成功匯出排假進度檔案 (.json)！");
+        }
+
+        function importFromJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && data.userPlan) {
+                        setUserPlan(data.userPlan);
+                        if (data.dailySalary) {
+                            document.getElementById('daily-salary').value = data.dailySalary;
+                        }
+                        renderCalendars();
+                        calculateBenefits();
+                        showToast("📂 已成功載入排假紀錄與設定！");
+                    } else {
+                        showToast("⚠️ 檔案格式不符合，請確認為正確的 JSON 備份檔。");
+                    }
+                } catch (err) {
+                    console.error("Import error:", err);
+                    showToast("❌ 讀取備份檔案發生錯誤！");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        let currentImageBlob = null;
+        let currentImageUrl = null;
+        const IMAGE_FILE_NAME = '115-116年榮退黃金排程月曆.png';
+
+        function openImageOverlay(blob) {
+            if (currentImageUrl) URL.revokeObjectURL(currentImageUrl);
+            currentImageBlob = blob;
+            currentImageUrl = URL.createObjectURL(blob);
+            document.getElementById('image-preview').src = currentImageUrl;
+            const ov = document.getElementById('image-overlay');
+            ov.classList.remove('hidden');
+            ov.classList.add('flex');
+        }
+        function closeImageOverlay() {
+            const ov = document.getElementById('image-overlay');
+            ov.classList.add('hidden');
+            ov.classList.remove('flex');
+        }
+        function shareCurrentImage() {
+            if (!currentImageBlob) return;
+            let file = null;
+            try { file = new File([currentImageBlob], IMAGE_FILE_NAME, { type: 'image/png' }); } catch (e) {}
+            if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({ files: [file], title: '榮退排程月曆' }).catch(err => {
+                    if (err && err.name !== 'AbortError') downloadBlob(currentImageBlob, IMAGE_FILE_NAME);
+                });
+            } else {
+                downloadBlob(currentImageBlob, IMAGE_FILE_NAME);
+            }
+        }
+
+        // ===== iOS 安裝提示 =====
+        function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+        function isStandalone() { return window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches); }
+        function dismissInstallHint() {
+            document.getElementById('install-hint').classList.add('hidden');
+            document.getElementById('install-hint').classList.remove('flex');
+            try { localStorage.setItem('retire116.hintDismissed', '1'); } catch (e) {}
+        }
+        function maybeShowInstallHint() {
+            try {
+                if (isIOS() && !isStandalone() && !localStorage.getItem('retire116.hintDismissed')) {
+                    const el = document.getElementById('install-hint');
+                    el.classList.remove('hidden');
+                    el.classList.add('flex');
+                }
+            } catch (e) {}
+        }
+
+        function exportToImage() {
+            const container = document.getElementById('calendar-capture-container');
+            showToast("正在為您繪製高解析度排假行事曆...");
+
+            html2canvas(container, {
+                backgroundColor: '#020617',
+                scale: 2,
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                canvas.toBlob(blob => {
+                    if (!blob) { showToast("❌ 導出失敗，請重試。"); return; }
+                    openImageOverlay(blob);
+                }, 'image/png');
+            }).catch(err => {
+                console.error("導出失敗：", err);
+                showToast("❌ 導出失敗，請重試。");
+            });
+        }
+
+        window.onload = function() {
+            loadPlan();
+            renderCalendars();
+            calculateBenefits();
+            maybeShowInstallHint();
+
+            if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+                navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 註冊失敗', err));
+            }
+        };
+
+        // App 從背景回到前景時，重新以「今天」的日期計算（PWA 可能放在背景好幾天）
+        let lastRenderDay = new Date().toDateString();
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && new Date().toDateString() !== lastRenderDay) {
+                lastRenderDay = new Date().toDateString();
+                renderCalendars();
+                calculateBenefits();
+            }
+        });
+    </script>
+</body>
+</html>
