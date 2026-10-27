@@ -125,8 +125,8 @@
                         </strong>
                     </div>
                     <!-- 動態今日與倒數天數 -->
-                    <div class="flex justify-between py-1.5 border-b border-slate-800/80 bg-slate-950/60 -mx-2 px-3 rounded-lg border border-slate-800">
-                        <span class="text-slate-400 flex items-center gap-1"><i class="fa-solid fa-clock text-cyan-400"></i> 執行今日日期</span>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/80 font-bold bg-slate-950/60 -mx-2 px-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-300 flex items-center gap-1"><i class="fa-solid fa-clock text-cyan-400"></i> 今日日期</span>
                         <strong class="text-cyan-300 text-sm md:text-base font-bold" id="profile-today-date">--</strong>
                     </div>
                     <div class="flex justify-between py-1.5 border-b border-slate-800/80">
@@ -145,19 +145,11 @@
                         <span class="text-slate-400">116年法定權益假別</span>
                         <strong class="text-white text-sm md:text-base">身心 3天 + 事假 4天 + 病假 28天</strong>
                     </div>
-                    <!-- 醒目呈現：實際需到工天數與剩餘天數精算 -->
+                    <!-- 醒目呈現：從今日起剩餘到工天數 -->
                     <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
-                        <div class="flex justify-between items-center border-b border-emerald-500/20 pb-2">
-                            <span class="text-emerald-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-briefcase text-emerald-400 mr-1"></i> 116年實際上班</span>
-                            <strong class="text-emerald-400 text-sm md:text-base font-black" id="profile-workdays-116">18 天 <span class="text-xs text-slate-400 font-normal">(原需 35 天)</span></strong>
-                        </div>
-                        <div class="flex justify-between items-center border-b border-emerald-500/20 pb-2">
-                            <span class="text-cyan-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-calendar-days text-cyan-400 mr-1"></i> 跨年全期實際上班</span>
-                            <strong class="text-cyan-300 text-sm md:text-base font-black" id="profile-workdays-total">83 天 <span class="text-xs text-slate-400 font-normal">(原需 100 天)</span></strong>
-                        </div>
                         <div class="flex justify-between items-center pt-0.5">
                             <span class="text-amber-300 font-bold text-xs md:text-sm"><i class="fa-solid fa-hourglass-half text-amber-400 mr-1"></i> 從今日起剩餘到工</span>
-                            <strong class="text-amber-400 text-sm md:text-base font-black" id="profile-workdays-remaining">-- 天</strong>
+                            <strong class="text-amber-400 text-base md:text-lg font-black" id="profile-workdays-remaining">-- 天</strong>
                         </div>
                     </div>
                     <div class="flex justify-between py-1.5">
@@ -177,8 +169,7 @@
                     <!-- 每日薪資輸入 -->
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
-                            <label class="block text-xs text-slate-400">請設定您的預估日薪：</label>
-                            <span class="text-xs text-slate-500">不休假加班費計算基準</span>
+                            <label class="block text-xs text-slate-400">預估日薪 (不休假加班費基準)：</label>
                         </div>
                         <div class="relative rounded-lg shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -194,7 +185,7 @@
                     <!-- 分年度統計表格 -->
                     <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3 text-xs">
                         <div class="font-bold text-slate-200 border-b border-slate-800 pb-2 flex justify-between items-center">
-                            <span><i class="fa-solid fa-list-check text-emerald-400 mr-1"></i> 各年度統計明細表</span>
+                            <span><i class="fa-solid fa-list-check text-emerald-400 mr-1"></i> 各年度假別與上班天數統計</span>
                             <span class="text-[10px] text-slate-400 font-normal">單位：天</span>
                         </div>
                         
@@ -239,25 +230,27 @@
                                         <td id="stat-116-overtime" class="font-mono">0</td>
                                         <td id="stat-tot-overtime" class="font-mono font-bold text-cyan-300">0</td>
                                     </tr>
+                                    <!-- 請假總日數小計 -->
+                                    <tr class="bg-indigo-950/40 text-indigo-200 font-bold border-t border-indigo-500/30">
+                                        <td class="py-1.5 text-left text-indigo-300"><i class="fa-solid fa-umbrella-beach mr-1"></i> 請假總日數小計</td>
+                                        <td id="stat-115-total-leave" class="font-mono">0</td>
+                                        <td id="stat-116-total-leave" class="font-mono">17</td>
+                                        <td id="stat-tot-total-leave" class="font-mono font-black text-indigo-300">17</td>
+                                    </tr>
                                     <tr class="bg-slate-900/60 text-slate-400 border-t border-slate-800">
-                                        <td class="py-1.5 text-left font-medium">原法定上班日數</td>
-                                        <td id="stat-115-std" class="font-mono">65</td>
+                                        <td class="py-1.5 text-left font-medium">原法定工作日</td>
+                                        <td id="stat-115-std" class="font-mono">62</td>
                                         <td id="stat-116-std" class="font-mono">35</td>
-                                        <td id="stat-tot-std" class="font-mono font-bold">100</td>
+                                        <td id="stat-tot-std" class="font-mono font-bold">97</td>
                                     </tr>
-                                    <tr class="bg-slate-900/60 text-amber-300/90">
-                                        <td class="py-1.5 text-left font-medium">請假天數小計</td>
-                                        <td id="stat-115-leave-tot" class="font-mono">0</td>
-                                        <td id="stat-116-leave-tot" class="font-mono">17</td>
-                                        <td id="stat-tot-leave-tot" class="font-mono font-bold">17</td>
+                                    <!-- 各年度實際需上班日數 -->
+                                    <tr class="bg-emerald-950/30 text-emerald-300 font-bold border-t border-emerald-500/20">
+                                        <td class="py-1.5 text-left"><i class="fa-solid fa-briefcase mr-1 text-emerald-400"></i> 實際需上班日數</td>
+                                        <td id="stat-115-actual-work" class="font-mono">62</td>
+                                        <td id="stat-116-actual-work" class="font-mono">18</td>
+                                        <td id="stat-tot-actual-work" class="font-mono font-black text-emerald-300">80</td>
                                     </tr>
-                                    <tr class="bg-emerald-950/40 text-emerald-400 font-bold border-t border-emerald-500/30">
-                                        <td class="py-1.5 text-left"><i class="fa-solid fa-check-double mr-1"></i> 實際到工上班</td>
-                                        <td id="stat-115-work" class="font-mono">65</td>
-                                        <td id="stat-116-work" class="font-mono text-emerald-300">18</td>
-                                        <td id="stat-tot-work" class="font-mono text-emerald-400 font-black">83</td>
-                                    </tr>
-                                    <tr class="bg-amber-950/30 text-amber-300 font-bold">
+                                    <tr class="bg-amber-950/30 text-amber-300 font-bold border-t border-amber-500/20">
                                         <td class="py-1.5 text-left"><i class="fa-solid fa-clock mr-1"></i> 從今日起剩餘到工</td>
                                         <td colspan="3" id="stat-remaining-work-td" class="font-mono text-right pr-2">-- 天</td>
                                     </tr>
@@ -269,7 +262,7 @@
                     <!-- 115與116年不休假加班費分年度明細卡片 -->
                     <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3.5 text-xs md:text-sm">
                         <div class="text-xs font-bold text-slate-200 border-b border-slate-800 pb-2 flex items-center justify-between">
-                            <span><i class="fa-solid fa-coins text-amber-400 mr-1"></i> 分年度不休假加班費與額度試算</span>
+                            <span><i class="fa-solid fa-coins text-amber-400 mr-1"></i> 分年度不休假加班費試算</span>
                             <span class="text-slate-400 font-normal">合計最高 40 天</span>
                         </div>
 
@@ -313,7 +306,7 @@
                     <div class="bg-gradient-to-r from-emerald-950/40 to-teal-950/20 p-4.5 rounded-xl border border-emerald-500/30 shadow-lg">
                         <div class="text-xs text-slate-400 mb-1 flex justify-between">
                             <span class="font-bold text-slate-300">雙年度不休假加班費總計 (115+116年)</span>
-                            <span class="text-slate-500 font-mono text-[11px]" id="calc-method-label">(115年20天 + 116年20天 = 40天 × 2,880)</span>
+                            <span class="text-slate-500 font-mono text-[11px]" id="calc-method-label">(115年20天 + 116年20天)</span>
                         </div>
                         <div class="text-2xl md:text-3xl font-black text-emerald-400 tracking-tight" id="total-cash-bonus">NT$ 115,200</div>
                     </div>
@@ -323,13 +316,13 @@
             <!-- 操作說明卡片 -->
             <div class="bg-slate-900 p-4.5 rounded-2xl border border-slate-800 shadow-xl">
                 <h3 class="font-bold text-base text-white mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-hand-pointer text-blue-400 text-lg"></i> 智慧點擊循環切換假別
+                    <i class="fa-solid fa-hand-pointer text-blue-400 text-lg"></i> 點擊月曆切換假別
                 </h3>
                 <p class="text-xs md:text-sm text-slate-300 leading-relaxed mb-3">
                     點擊右側月曆上的工作日可切換假別：
-                    <br><span class="text-cyan-400 font-bold">• 115年：</span>可切換【上班】、【休假】、【加班補休】。
+                    <br><span class="text-cyan-400 font-bold">• 115年：</span>切換【上班】、【休假】、【加班補休】。
                     <br><span class="text-emerald-400 font-bold">• 116年：</span>包含【特休】、【身心】、【事假】、【病假】、【補休】。
-                    <br><span class="text-amber-400 font-bold">• 已過日期：</span>早於今日之歷史日期已鎖定保護，不可變更。
+                    <br><span class="text-amber-400 font-bold">• 已過日期：</span>早於今日之日期已鎖定保護，無法變更。
                 </p>
                 <div class="grid grid-cols-3 gap-2 text-xs">
                     <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 text-slate-300 flex items-center gap-1.5">
@@ -384,12 +377,6 @@
                         </h2>
                         <p class="text-xs md:text-sm text-slate-300 mt-1 font-medium" id="calendar-subtitle">涵蓋跨年漸進退休佈局 ｜ 退休生效日：116 年 3 月 2 日 (二)</p>
                     </div>
-                    <div class="text-right hidden sm:block">
-                        <span class="text-xs text-slate-400 font-bold block mb-1">116年到工精算指標：</span>
-                        <div class="text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-                            原需 35 天 ➔ 實際只需到工 <span id="header-workday-count" class="text-sm underline decoration-emerald-400 font-black">18 天</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- 各月份月曆 (動態容器) -->
@@ -400,7 +387,7 @@
                 <!-- 底部頁尾 -->
                 <div class="text-center pt-3 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
                     <span>* 本表依中華民國 115-116 年行政院人事行政總處核定辦公日曆表建置</span>
-                    <span>我的榮退黃金指南 V9.3 (115-116年雙年度獨立精算與歷程防護版)</span>
+                    <span>我的榮退黃金指南 V9.5</span>
                 </div>
 
             </div>
@@ -416,6 +403,7 @@
             '115-10-03': '週六例假', '115-10-04': '週日例假',
             '115-10-09': '國慶補假', '115-10-10': '國慶節', '115-10-11': '週日例假',
             '115-10-17': '週六例假', '115-10-18': '週日例假',
+            '115-10-23': '颱風假 🌀',
             '115-10-24': '週六例假', '115-10-25': '臺灣光復節', '115-10-26': '光復補假',
             '115-10-31': '週六例假',
 
@@ -536,7 +524,6 @@
         function handleCellClick(dateKey) {
             const todayInfo = getTodayInfo();
 
-            // 若點選之日期早於今日，鎖定不可異動假別
             if (dateKey < todayInfo.dateKey) {
                 showToast(`🔒 日期【${dateKey}】已為過去歷史紀錄，無法變更假別！`);
                 return;
@@ -558,7 +545,6 @@
             const currentStatus = userPlan[dateKey] || 'work';
             let nextStatus = 'work';
 
-            // 依照年份進行不同的假別循環切換機制
             if (dateKey.startsWith('115-')) {
                 if (currentStatus === 'work') {
                     nextStatus = 'special_leave';
@@ -620,7 +606,6 @@
 
             const todayInfo = getTodayInfo();
             
-            // 更新頂端與儀表板中的今日與倒數資訊
             const todayDateEl = document.getElementById('profile-today-date');
             if (todayDateEl) {
                 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -631,20 +616,16 @@
                 countdownEl.textContent = `${todayInfo.diffDays} 天`;
             }
 
-            // 計算起始年月：若執行日期小於 115/10 則從 115/10 開始；若在 115/10~116/3 之間，則從執行當月開始
-            let startYearROC = 115;
-            let startMonth = 10;
+            let startYearROC = todayInfo.yearROC;
+            let startMonth = todayInfo.month;
 
-            if (todayInfo.yearROC === 115 && todayInfo.month > 10) {
-                startMonth = todayInfo.month;
-            } else if (todayInfo.yearROC === 116 && todayInfo.month <= 3) {
-                startYearROC = 116;
-                startMonth = todayInfo.month;
+            if (startYearROC < 115 || (startYearROC === 115 && startMonth < 10)) {
+                startYearROC = 115;
+                startMonth = 10;
             }
 
-            // 各月份對照說明
             const monthMeta = {
-                '115-10': { title: '「退休前半年衝刺期」', note: '10/24-10/26 光復節三連假', color: 'cyan' },
+                '115-10': { title: '「退休前半年衝刺期」', note: '10/23 颱風假 ｜ 10/24-10/26 光復節三連假', color: 'cyan' },
                 '115-11': { title: '「業務盤點與傳承準備」', note: '消化 115 年度休假與補休', color: 'cyan' },
                 '115-12': { title: '「年度結算與交接整備」', note: '12/25-12/27 行憲紀念日三連假', color: 'cyan' },
                 '116-01': { title: '「過年前分散減壓月」', note: '每週五事假＋1/28身心假，享受週休三~四日', color: 'blue' },
@@ -652,13 +633,12 @@
                 '116-03': { title: '「榮退大吉」', note: '🎉 3/2 圓滿榮退，開啟璀璨退休第二人生！', color: 'amber' }
             };
 
-            // 依序生成自起始年月至 116年3月 之月份卡片
             let currentYr = startYearROC;
             let currentM = startMonth;
 
             while (currentYr < 116 || (currentYr === 116 && currentM <= 3)) {
                 const monthKey = `${currentYr}-${String(currentM).padStart(2, '0')}`;
-                const meta = monthMeta[monthKey] || { title: '', note: '退休排程規劃', color: 'blue' };
+                const meta = monthMeta[monthKey] || { title: '「退休排程規劃」', note: '假別安排與精算', color: 'blue' };
                 const totalDays = (currentYr === 116 && currentM === 2) ? 28 : (currentM === 11 ? 30 : 31);
                 
                 const monthCard = document.createElement('div');
@@ -695,21 +675,19 @@
             const adYear = yearROC === 115 ? 2026 : 2027;
             const firstDay = getFirstDayOfWeek(adYear, month);
             
-            // 月初空格
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = "min-h-[70px] md:min-h-[85px] rounded-xl bg-slate-950/20 border border-dashed border-slate-900/40 flex items-center justify-center";
                 container.appendChild(emptyCell);
             }
 
-            // 日期元素
             for (let day = 1; day <= totalDays; day++) {
                 const dateKey = formatDateKey(yearROC, month, day);
                 const isHoliday = HOLIDAYS[dateKey];
                 const isRetire = (dateKey === '116-03-02');
                 const isPostRetire = (new Date(convertYearToAdu(dateKey)) > new Date('2027-03-02'));
                 const isToday = (dateKey === todayKey);
-                const isPast = (dateKey < todayKey); // 判斷是否為已過的歷史日期
+                const isPast = (dateKey < todayKey);
                 
                 const cell = document.createElement('div');
                 cell.className = "min-h-[70px] md:min-h-[85px] rounded-xl p-2.5 flex flex-col justify-between transition-all duration-200 cursor-pointer relative group text-sm font-black select-none border shadow-md ";
@@ -758,7 +736,6 @@
                         tagColor = "text-emerald-400 bg-emerald-500/5 rounded py-0.5 font-black";
                     }
 
-                    // 對於已過期/歷史日期，套用深色鎖定塗色樣式，並呈現不可變更視覺
                     if (isPast) {
                         bgStyle = "bg-slate-950/80 border-slate-850 text-slate-500 opacity-75 hover:opacity-100 cursor-not-allowed";
                         tagColor = "text-slate-500 font-medium";
@@ -804,26 +781,26 @@
                         if (HOLIDAYS[dateKey] || dateKey === '116-03-02') continue;
                         if (new Date(convertYearToAdu(dateKey)) > new Date('2027-03-02')) continue;
 
-                        stats[yr].stdWorkdays++;
-
                         const st = userPlan[dateKey] || 'work';
-                        if (st === 'work') {
-                            stats[yr].work++;
-                            if (yr === '116') lastWorkdayKey = dateKey;
-                        } else if (st === 'special_leave') {
-                            stats[yr].special++;
-                        } else if (st === 'mental_leave') {
-                            stats[yr].mental++;
-                        } else if (st === 'personal_leave') {
-                            stats[yr].personal++;
-                        } else if (st === 'sick_leave') {
-                            stats[yr].sick++;
-                        } else if (st === 'overtime_leave') {
-                            stats[yr].overtime++;
-                        }
 
-                        // 統計自「今日」起算之剩餘到工上班日數
+                        // 僅計算從今日起（包含今日）的剩餘工作天數與假別統計
                         if (dateKey >= todayInfo.dateKey) {
+                            stats[yr].stdWorkdays++;
+                            if (st === 'work') {
+                                stats[yr].work++;
+                                if (yr === '116') lastWorkdayKey = dateKey;
+                            } else if (st === 'special_leave') {
+                                stats[yr].special++;
+                            } else if (st === 'mental_leave') {
+                                stats[yr].mental++;
+                            } else if (st === 'personal_leave') {
+                                stats[yr].personal++;
+                            } else if (st === 'sick_leave') {
+                                stats[yr].sick++;
+                            } else if (st === 'overtime_leave') {
+                                stats[yr].overtime++;
+                            }
+
                             remainingStdWorkdays++;
                             if (st === 'work') {
                                 remainingActualWorkdays++;
@@ -833,14 +810,15 @@
                 });
             });
 
-            const leave115Tot = stats[115].special + stats[115].overtime;
-            const leave116Tot = stats[116].special + stats[116].mental + stats[116].personal + stats[116].sick + stats[116].overtime;
+            // 計算請假總日數
+            const totalLeave115 = stats[115].special + stats[115].mental + stats[115].personal + stats[115].sick + stats[115].overtime;
+            const totalLeave116 = stats[116].special + stats[116].mental + stats[116].personal + stats[116].sick + stats[116].overtime;
+            const totalLeaveTot = totalLeave115 + totalLeave116;
 
+            // 更新統計表格 UI 數據
             const el115Special = document.getElementById('stat-115-special'); if (el115Special) el115Special.textContent = stats[115].special;
             const el115Overtime = document.getElementById('stat-115-overtime'); if (el115Overtime) el115Overtime.textContent = stats[115].overtime;
             const el115Std = document.getElementById('stat-115-std'); if (el115Std) el115Std.textContent = stats[115].stdWorkdays;
-            const el115LeaveTot = document.getElementById('stat-115-leave-tot'); if (el115LeaveTot) el115LeaveTot.textContent = leave115Tot;
-            const el115Work = document.getElementById('stat-115-work'); if (el115Work) el115Work.textContent = stats[115].work;
 
             const el116Special = document.getElementById('stat-116-special'); if (el116Special) el116Special.textContent = stats[116].special;
             const el116Mental = document.getElementById('stat-116-mental'); if (el116Mental) el116Mental.textContent = stats[116].mental;
@@ -848,8 +826,6 @@
             const el116Sick = document.getElementById('stat-116-sick'); if (el116Sick) el116Sick.textContent = stats[116].sick;
             const el116Overtime = document.getElementById('stat-116-overtime'); if (el116Overtime) el116Overtime.textContent = stats[116].overtime;
             const el116Std = document.getElementById('stat-116-std'); if (el116Std) el116Std.textContent = stats[116].stdWorkdays;
-            const el116LeaveTot = document.getElementById('stat-116-leave-tot'); if (el116LeaveTot) el116LeaveTot.textContent = leave116Tot;
-            const el116Work = document.getElementById('stat-116-work'); if (el116Work) el116Work.textContent = stats[116].work;
 
             const elTotSpecial = document.getElementById('stat-tot-special'); if (elTotSpecial) elTotSpecial.textContent = stats[115].special + stats[116].special;
             const elTotMental = document.getElementById('stat-tot-mental'); if (elTotMental) elTotMental.textContent = stats[116].mental;
@@ -857,33 +833,29 @@
             const elTotSick = document.getElementById('stat-tot-sick'); if (elTotSick) elTotSick.textContent = stats[116].sick;
             const elTotOvertime = document.getElementById('stat-tot-overtime'); if (elTotOvertime) elTotOvertime.textContent = stats[115].overtime + stats[116].overtime;
             const elTotStd = document.getElementById('stat-tot-std'); if (elTotStd) elTotStd.textContent = stats[115].stdWorkdays + stats[116].stdWorkdays;
-            const elTotLeaveTot = document.getElementById('stat-tot-leave-tot'); if (elTotLeaveTot) elTotLeaveTot.textContent = leave115Tot + leave116Tot;
-            const elTotWork = document.getElementById('stat-tot-work'); if (elTotWork) elTotWork.textContent = stats[115].work + stats[116].work;
+
+            // 顯示請假總日數小計
+            const el115TotalLeave = document.getElementById('stat-115-total-leave'); if (el115TotalLeave) el115TotalLeave.textContent = totalLeave115;
+            const el116TotalLeave = document.getElementById('stat-116-total-leave'); if (el116TotalLeave) el116TotalLeave.textContent = totalLeave116;
+            const elTotTotalLeave = document.getElementById('stat-tot-total-leave'); if (elTotTotalLeave) elTotTotalLeave.textContent = totalLeaveTot;
+
+            // 計算與顯示各年度實際需上班日數 (原法定工作日 - 請假總日數)
+            const actualWork115 = stats[115].stdWorkdays - totalLeave115;
+            const actualWork116 = stats[116].stdWorkdays - totalLeave116;
+            const actualWorkTot = actualWork115 + actualWork116;
+
+            const el115ActualWork = document.getElementById('stat-115-actual-work'); if (el115ActualWork) el115ActualWork.textContent = actualWork115;
+            const el116ActualWork = document.getElementById('stat-116-actual-work'); if (el116ActualWork) el116ActualWork.textContent = actualWork116;
+            const elTotActualWork = document.getElementById('stat-tot-actual-work'); if (elTotActualWork) elTotActualWork.textContent = actualWorkTot;
 
             const elRemainingWorkTd = document.getElementById('stat-remaining-work-td');
             if (elRemainingWorkTd) {
                 elRemainingWorkTd.innerHTML = `<span class="text-amber-400 font-black">${remainingActualWorkdays} 天</span> <span class="text-slate-400 font-normal text-[11px]">(原剩 ${remainingStdWorkdays} 天)</span>`;
             }
 
-            // 更新左側卡片三項動態指標
-            const profileWork116El = document.getElementById('profile-workdays-116');
-            if (profileWork116El) {
-                profileWork116El.innerHTML = `${stats[116].work} 天 <span class="text-xs text-slate-400 font-normal">(原需 ${stats[116].stdWorkdays} 天)</span>`;
-            }
-
-            const profileWorkTotalEl = document.getElementById('profile-workdays-total');
-            if (profileWorkTotalEl) {
-                profileWorkTotalEl.innerHTML = `${stats[115].work + stats[116].work} 天 <span class="text-xs text-slate-400 font-normal">(原需 ${stats[115].stdWorkdays + stats[116].stdWorkdays} 天)</span>`;
-            }
-
             const profileWorkRemainingEl = document.getElementById('profile-workdays-remaining');
             if (profileWorkRemainingEl) {
                 profileWorkRemainingEl.innerHTML = `${remainingActualWorkdays} 天 <span class="text-xs text-slate-400 font-normal">(原剩 ${remainingStdWorkdays} 天)</span>`;
-            }
-
-            const headerWorkdayCountEl = document.getElementById('header-workday-count');
-            if (headerWorkdayCountEl) {
-                headerWorkdayCountEl.textContent = `${stats[116].work} 天 (自今日起剩 ${remainingActualWorkdays} 天)`;
             }
 
             const dailySalary = parseInt(document.getElementById('daily-salary').value) || 2880;
